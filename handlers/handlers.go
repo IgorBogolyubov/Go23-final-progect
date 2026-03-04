@@ -55,6 +55,9 @@ func TaskHandler(w http.ResponseWriter, r *http.Request) {
 	case http.MethodDelete:
 		DeleteTaskHandler(w, r)
 
+	default:
+		// Возвращаем статус 405, если метод не поддерживается
+		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
 

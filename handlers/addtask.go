@@ -15,18 +15,13 @@ import (
 func AddTaskHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	var task db.Task
-
-	type Resp struct {
-		ID    string `json:"id"`
-		Error string `json:"error"`
-	}
-	resp := &Resp{}
+	var resp db.Resp
 
 	var buf bytes.Buffer
 	// читаем тело запроса
 	_, err := buf.ReadFrom(r.Body)
 	if err != nil {
-
+		//Код с ошибкой выставляется внутри функции writeJson(w, resp)
 		resp.Error = "Ошибка чтения формы запроса"
 		writeJson(w, resp)
 		return
@@ -135,18 +130,11 @@ func UpdateTaskHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	var task db.Task
 	var repeat []string
-
-	type Resp struct {
-		ID    string `json:"id"`
-		Error string `json:"error"`
-	}
-	resp := &Resp{}
-
+	var resp db.Resp
 	var buf bytes.Buffer
 	// читаем тело запроса
 	_, err := buf.ReadFrom(r.Body)
 	if err != nil {
-
 		resp.Error = "Ошибка чтения формы запроса"
 		writeJson(w, resp)
 		return
@@ -187,6 +175,21 @@ func UpdateTaskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	/*
+		Обработчик должен возвращать JSON с полем id или error. В случае успеха возвращается идентификатор созданной записи, а в случае ошибки — текст ошибки.
+
+		{"id":"186"}
+
+		{"error":"Не указан заголовок задачи"}
+
+		Вот в каких случаях должны возвращаться ошибки:
+
+		    ошибка десериализации JSON;
+		    не указан заголовок задачи;
+		    дата представлена в формате, отличном от 20060102;
+		    правило повторения указано в неправильном формате.
+	*/
+
 	err = db.UpdateTask(&task)
 
 	if err != nil {
@@ -196,7 +199,6 @@ func UpdateTaskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	resp = &Resp{}
 	writeJson(w, resp)
 
 }
