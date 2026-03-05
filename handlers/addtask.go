@@ -21,14 +21,14 @@ func AddTaskHandler(w http.ResponseWriter, r *http.Request) {
 	// читаем тело запроса
 	_, err := buf.ReadFrom(r.Body)
 	if err != nil {
-		//Код с ошибкой выставляется внутри функции writeJson(w, resp)
+		w.WriteHeader(http.StatusBadRequest)
 		resp.Error = "Ошибка чтения формы запроса"
 		writeJson(w, resp)
 		return
 	}
 
 	if err = json.Unmarshal(buf.Bytes(), &task); err != nil {
-
+		w.WriteHeader(http.StatusBadRequest)
 		resp.Error = "Ошибка десиреализации"
 		writeJson(w, resp)
 		return
@@ -114,18 +114,6 @@ func checkDate(task *db.Task) error {
 	return nil
 }
 
-func writeJson(w http.ResponseWriter, data any) {
-
-	resp, err := json.Marshal(data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Write(resp)
-
-}
-
 func UpdateTaskHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	var task db.Task
@@ -135,13 +123,14 @@ func UpdateTaskHandler(w http.ResponseWriter, r *http.Request) {
 	// читаем тело запроса
 	_, err := buf.ReadFrom(r.Body)
 	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		resp.Error = "Ошибка чтения формы запроса"
 		writeJson(w, resp)
 		return
 	}
 
 	if err = json.Unmarshal(buf.Bytes(), &task); err != nil {
-
+		w.WriteHeader(http.StatusBadRequest)
 		resp.Error = "Ошибка десиреализации"
 		writeJson(w, resp)
 		return
@@ -174,21 +163,6 @@ func UpdateTaskHandler(w http.ResponseWriter, r *http.Request) {
 		writeJson(w, resp)
 		return
 	}
-
-	/*
-		Обработчик должен возвращать JSON с полем id или error. В случае успеха возвращается идентификатор созданной записи, а в случае ошибки — текст ошибки.
-
-		{"id":"186"}
-
-		{"error":"Не указан заголовок задачи"}
-
-		Вот в каких случаях должны возвращаться ошибки:
-
-		    ошибка десериализации JSON;
-		    не указан заголовок задачи;
-		    дата представлена в формате, отличном от 20060102;
-		    правило повторения указано в неправильном формате.
-	*/
 
 	err = db.UpdateTask(&task)
 
@@ -244,4 +218,16 @@ func DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJson(w, TasksResp{})
+}
+
+func writeJson(w http.ResponseWriter, data any) {
+
+	resp, err := json.Marshal(data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Write(resp)
+
 }
