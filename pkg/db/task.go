@@ -112,6 +112,10 @@ func GetTask(id string) (*Task, error) {
 }
 
 func DeleteTask(id string) error {
+	if id == "" {
+		return fmt.Errorf("not ID")
+	}
+
 	id1, err := strconv.Atoi(id)
 	if err != nil {
 		return fmt.Errorf("error ID: %w", err)
@@ -128,6 +132,10 @@ func DeleteTask(id string) error {
 }
 
 func UpdateDate(next string, id string) error {
+	if id == "" {
+		return fmt.Errorf("not ID")
+	}
+
 	id_Int, err := strconv.Atoi(id)
 	if err != nil {
 		return fmt.Errorf(`incorrect id for updating task`)

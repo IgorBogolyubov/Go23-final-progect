@@ -21,7 +21,7 @@ func NextDayHandler(w http.ResponseWriter, req *http.Request) {
 		now, err = time.Parse("20060102", req.FormValue("now"))
 
 		if err != nil {
-			http.Error(w, "Error date", http.StatusBadRequest)
+			http.Error(w, "Error parse", http.StatusBadRequest)
 			return
 		}
 	}
@@ -70,7 +70,7 @@ func TasksHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	tasks, err := db.Tasks(50) // в параметре максимальное количество записей
 	if err != nil {
-
+		http.Error(w, "Bad Request", http.StatusBadRequest)
 		writeJson(w, errResp{Error: "Ошибка запроса"})
 		return
 	}
@@ -95,6 +95,7 @@ func DoneHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err := strconv.Atoi(id)
 	if err != nil {
+		http.Error(w, "Bad ID", http.StatusBadRequest)
 		respError.Error = "Не верно задан ID"
 		writeJson(w, respError)
 		return
@@ -102,6 +103,7 @@ func DoneHandler(w http.ResponseWriter, r *http.Request) {
 	resp, err := db.GetTask(id)
 
 	if err != nil {
+		http.Error(w, "Task not faund", http.StatusBadRequest)
 		respError.Error = "Задача не найдена"
 		writeJson(w, respError)
 		return
@@ -111,6 +113,7 @@ func DoneHandler(w http.ResponseWriter, r *http.Request) {
 
 		now, err := time.Parse("20060102", resp.Date)
 		if err != nil {
+			http.Error(w, "error parse", http.StatusBadRequest)
 			respError.Error = "ошибка даты"
 			writeJson(w, respError)
 			return
@@ -118,6 +121,7 @@ func DoneHandler(w http.ResponseWriter, r *http.Request) {
 
 		answer, err := nextdate.NextDate(now, resp.Date, resp.Repeat)
 		if err != nil {
+			http.Error(w, "Bad Request data", http.StatusBadRequest)
 			respError.Error = "ошибка получения даты"
 			writeJson(w, respError)
 			return
@@ -125,15 +129,17 @@ func DoneHandler(w http.ResponseWriter, r *http.Request) {
 
 		err = db.UpdateDate(answer, id)
 		if err != nil {
+			http.Error(w, "error update date", http.StatusBadRequest)
 			respError.Error = "Ошибка обновления даты"
 			writeJson(w, respError)
 			return
 		}
 
 	} else {
-
 		err = db.DeleteTask(id)
+
 		if err != nil {
+			http.Error(w, "error delete row", http.StatusBadRequest)
 			respError.Error = "Ошибка удаления записи"
 			writeJson(w, respError)
 			return

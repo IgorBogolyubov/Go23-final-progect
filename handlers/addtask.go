@@ -21,21 +21,21 @@ func AddTaskHandler(w http.ResponseWriter, r *http.Request) {
 	// читаем тело запроса
 	_, err := buf.ReadFrom(r.Body)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, "Bad Request form", http.StatusBadRequest)
 		resp.Error = "Ошибка чтения формы запроса"
 		writeJson(w, resp)
 		return
 	}
 
 	if err = json.Unmarshal(buf.Bytes(), &task); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, "Bad json", http.StatusBadRequest)
 		resp.Error = "Ошибка десиреализации"
 		writeJson(w, resp)
 		return
 	}
 
 	if task.Title == "" {
-
+		http.Error(w, "Bad Title", http.StatusBadRequest)
 		resp.Error = "Не задан заголовок"
 		writeJson(w, resp)
 		return
@@ -45,7 +45,7 @@ func AddTaskHandler(w http.ResponseWriter, r *http.Request) {
 	err = checkDate(&task)
 
 	if err != nil {
-
+		http.Error(w, "Bad date", http.StatusBadRequest)
 		resp.Error = "Ошибка проверки даты"
 		writeJson(w, resp)
 		return
@@ -54,8 +54,8 @@ func AddTaskHandler(w http.ResponseWriter, r *http.Request) {
 	intId, err := db.AddTask(&task)
 
 	if err != nil {
-
-		resp.Error = "Ошибка конвнртации"
+		http.Error(w, "error add task", http.StatusBadRequest)
+		resp.Error = "Ошибка добавления записи"
 		writeJson(w, resp)
 		return
 	}
@@ -123,21 +123,21 @@ func UpdateTaskHandler(w http.ResponseWriter, r *http.Request) {
 	// читаем тело запроса
 	_, err := buf.ReadFrom(r.Body)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, "Bad Request form", http.StatusBadRequest)
 		resp.Error = "Ошибка чтения формы запроса"
 		writeJson(w, resp)
 		return
 	}
 
 	if err = json.Unmarshal(buf.Bytes(), &task); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		http.Error(w, "error json", http.StatusBadRequest)
 		resp.Error = "Ошибка десиреализации"
 		writeJson(w, resp)
 		return
 	}
 
 	if task.Title == "" {
-
+		http.Error(w, "Bad Title", http.StatusBadRequest)
 		resp.Error = "Не задан заголовок"
 		writeJson(w, resp)
 		return
@@ -148,6 +148,7 @@ func UpdateTaskHandler(w http.ResponseWriter, r *http.Request) {
 		repeat = strings.Split(strings.TrimSpace(task.Repeat), " ")
 
 		if repeat[0] != "d" && repeat[0] != "y" {
+			http.Error(w, "Bad repeat string", http.StatusBadRequest)
 			resp.Error = "не верный формат повторений"
 			writeJson(w, resp)
 			return
@@ -158,7 +159,7 @@ func UpdateTaskHandler(w http.ResponseWriter, r *http.Request) {
 	err = checkDate(&task)
 
 	if err != nil {
-
+		http.Error(w, "Bad date", http.StatusBadRequest)
 		resp.Error = "Ошибка проверки даты"
 		writeJson(w, resp)
 		return
@@ -167,7 +168,7 @@ func UpdateTaskHandler(w http.ResponseWriter, r *http.Request) {
 	err = db.UpdateTask(&task)
 
 	if err != nil {
-
+		http.Error(w, "Bad update data", http.StatusBadRequest)
 		resp.Error = "Ошибка обновления"
 		writeJson(w, resp)
 		return
@@ -189,6 +190,7 @@ func GetTaskHandler(w http.ResponseWriter, r *http.Request) {
 	resp, err := db.GetTask(id)
 
 	if err != nil {
+		http.Error(w, "Bad Request task", http.StatusBadRequest)
 		resp1.Error = "Задача не найдена"
 		writeJson(w, resp1)
 		return
@@ -209,10 +211,11 @@ func DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 	resp := &Resp{}
 
 	id := r.URL.Query().Get("id")
-	err := db.DeleteTask(id)
 
+	err := db.DeleteTask(id)
 	if err != nil {
-		resp.Error = "Задача не найдена"
+		http.Error(w, "Bad delete task", http.StatusBadRequest)
+		resp.Error = "Ошибка удаления записи"
 		writeJson(w, resp)
 		return
 	}
