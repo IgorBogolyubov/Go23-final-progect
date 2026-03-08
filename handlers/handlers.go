@@ -129,7 +129,7 @@ func DoneHandler(w http.ResponseWriter, r *http.Request) {
 
 		err = db.UpdateDate(answer, id)
 		if err != nil {
-			http.Error(w, "error update date", http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			respError.Error = "Ошибка обновления даты"
 			writeJson(w, respError)
 			return
@@ -139,7 +139,7 @@ func DoneHandler(w http.ResponseWriter, r *http.Request) {
 		err = db.DeleteTask(id)
 
 		if err != nil {
-			http.Error(w, "error delete row", http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			respError.Error = "Ошибка удаления записи"
 			writeJson(w, respError)
 			return

@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -79,6 +80,15 @@ func checkDate(task *db.Task) error {
 
 	if len(task.Date) == 0 {
 		task.Date = now.Format("20060102")
+	}
+
+	pattern := `^\d+$` // Только цифры от начала до конца строки
+	re := regexp.MustCompile(pattern)
+
+	if len(task.Date) != 0 && re.MatchString(task.Date) == false {
+
+		return errors.New("не верный формат даты")
+
 	}
 
 	t, err := time.Parse("20060102", task.Date)
@@ -190,7 +200,7 @@ func GetTaskHandler(w http.ResponseWriter, r *http.Request) {
 	resp, err := db.GetTask(id)
 
 	if err != nil {
-		http.Error(w, "Bad Request task", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		resp1.Error = "Задача не найдена"
 		writeJson(w, resp1)
 		return
@@ -214,7 +224,7 @@ func DeleteTaskHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := db.DeleteTask(id)
 	if err != nil {
-		http.Error(w, "Bad delete task", http.StatusBadRequest)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		resp.Error = "Ошибка удаления записи"
 		writeJson(w, resp)
 		return
